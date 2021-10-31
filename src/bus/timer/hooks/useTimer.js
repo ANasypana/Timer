@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { interval } from 'rxjs';
 
-
 export const useTimer = () => {
   const [timer, setTimer] = useState(0);
   const [wait, setWait] = useState(0);
