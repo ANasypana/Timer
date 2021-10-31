@@ -1,59 +1,61 @@
-import React, {useState, useRef} from 'react';
+import React, { useState } from 'react';
+import { interval } from 'rxjs';
+
 
 export const useTimer = () => {
-  const intervalRef = useRef();
-  const [currentValue, setCurrentValue ] = useState(0);
-  const [isStarted, setIsStarted] = useState(false);
-  const [clickCounter, setClickCounter] = useState(0);
+  const [timer, setTimer] = useState(0);
+  const [wait, setWait] = useState(0);
 
-  const _tick = () => setCurrentValue(prevCurrentValue => prevCurrentValue + 1);
+  const [subscription, setSubscription] = useState("");
+  const [prevent, setPrevent] = useState(true);
 
-  const _clickedIncrease = () => {
-    if(clickCounter > 0){
-      clearInterval(intervalRef.current);
-      setIsStarted(false)
-      return
-    }
-   setClickCounter(prevClickCounter =>  prevClickCounter + 1)
-  };
-
-  const _clickedDecrease = () => setClickCounter(prevClickCounter => prevClickCounter - 1);
-
-  const timer = () => {
-    let timerId = setInterval(_tick, 1000);
-    return timerId
-  };
-
-  const stop = () => {
-    clearInterval(intervalRef.current);
-    setCurrentValue(0);
-    setIsStarted(false);
-    setClickCounter(0);
-  };
-
-  const doTimer = () => {
-    if(!isStarted){
-      setIsStarted(true);
-      setClickCounter(0);
-      intervalRef.current = timer();
-
-      return
-    }
-    stop()
-  };
-
-  const reset = () => {
-    if(isStarted){
-      clearInterval(intervalRef.current);
-      setCurrentValue(0);
-      intervalRef.current = timer();
-    }
-  };
-
-  const wait = () => {
-    _clickedIncrease()
-    setTimeout(_clickedDecrease, 300);
+  const cleaner = () => {
+    subscription.unsubscribe();
+    setTimer(0);
+    setWait(0);
+    setSubscription("");
   }
 
-  return {currentValue, isStarted, reset, doTimer, stop, wait}
+
+  const onStartHandler = () => {
+    if (!subscription) {
+      const timerSubscription = interval(1000)
+        .subscribe((v) => {
+          setTimer(v + wait);
+        });
+      setSubscription(timerSubscription);
+    } else {
+      cleaner();
+    }
+  };
+
+  const onWaitHandler = (event) => {
+    if (prevent) {
+      setPrevent(false);
+      const timerInstance = setTimeout(() => {
+        setPrevent(true);
+        clearTimeout(timerInstance);
+      }, 300);
+    } else {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+
+      setWait(timer);
+      setSubscription("");
+    }
+  };
+
+  const onResetHandler = () => {
+    if (subscription) {
+      subscription.unsubscribe();
+    }
+
+    const timerSubscription = interval(1000).subscribe((v) => {
+      setTimer(v);
+    });
+    setSubscription(timerSubscription);
+  };
+
+  return {onResetHandler, onStartHandler, onWaitHandler, timer, subscription, cleaner}
 }

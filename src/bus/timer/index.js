@@ -3,17 +3,18 @@ import { useTimer } from './hooks/useTimer';
 import { numberIntoTime } from '../../common/utils/numberIntoTime';
 
 export const Timer = () => {
-  const { currentValue, isStarted, reset, doTimer, stop, wait } = useTimer();
-  const { hour, min, sec } = numberIntoTime(currentValue)
-  const startedBtn = isStarted ? 'Stop' : 'Start';
+  const { onResetHandler, onStartHandler, onWaitHandler, timer, subscription, cleaner } = useTimer();
+  const { hour, min, sec } = numberIntoTime(timer)
+  const startedBtn = !subscription ? 'Start' : 'Stop';
 
   useEffect(() =>{
-    return () => stop()
+    return () => cleaner()
   }, [])
 
   return(
     <div className='timer'>
       <p className='large'>
+
         <span>{hour}</span>
         :
         <span>{min}</span>
@@ -23,21 +24,21 @@ export const Timer = () => {
       <div className='btn-container'>
         <button
           className='btn'
-          onClick={doTimer}
+          onClick={onStartHandler}
         >
           {startedBtn}
         </button>
         <button
           className='btn'
-          disabled={!isStarted}
-          onClick={wait}
+          disabled={!subscription}
+          onClick={onWaitHandler}
         >
           Wait
         </button>
         <button
           className='btn'
-          disabled={!isStarted}
-          onClick={reset}
+          disabled={!subscription}
+          onClick={onResetHandler}
         >
           Reset
         </button>
